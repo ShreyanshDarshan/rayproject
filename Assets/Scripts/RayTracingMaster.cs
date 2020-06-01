@@ -4,7 +4,7 @@ public class RayTracingMaster : MonoBehaviour
     public ComputeShader RayTracingShader;
     private RenderTexture _target;
 
-    public Texture SkyboxTexture
+    public Texture SkyboxTexture;
 
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
