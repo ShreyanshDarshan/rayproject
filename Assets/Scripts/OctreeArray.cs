@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Octree : MonoBehaviour
+public class OctreeArray : MonoBehaviour
 {
     public float size = 10.0f;
+    int headindex = 0;
+
     class Square
     {
         public Vector3 pos = new Vector3();
@@ -13,7 +15,7 @@ public class Octree : MonoBehaviour
         public bool isInside(Vector3 point)
         {
             return
-                (   point.x >= pos.x - w &&
+                (point.x >= pos.x - w &&
                     point.x < pos.x + w &&
                     point.y >= pos.y - w &&
                     point.y < pos.y + w &&
@@ -26,7 +28,7 @@ public class Octree : MonoBehaviour
     {
         public Square boundary = new Square();
         public float numpoints;
-        public Tree[] child = new Tree[8];     //lower sw, se, ne, sw | upper sw, se, ne, sw
+        public int[] child = new int[8];     //lower sw, se, ne, sw | upper sw, se, ne, sw
         public int level;
         public bool divided;
 
@@ -37,9 +39,13 @@ public class Octree : MonoBehaviour
             boundary.pos = pos;
             boundary.w = w;
             numpoints = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                child[i] = -1;
+            }
         }
 
-        public void subdivide()
+        public void subdivide(List<Tree> AllNodes, ref int headind)
         {
             if (level > 1)
             {
@@ -59,29 +65,31 @@ public class Octree : MonoBehaviour
 
                 for (int i = 0; i < 8; i++)
                 {
-                    child[i] = new Tree(level - 1, centers[i], boundary.w / 2.0f);
+                    AllNodes.Add( new Tree(level - 1, centers[i], boundary.w / 2.0f) );
+                    child[i] = headind;
+                    headind++;
                 }
                 divided = true;
             }
         }
 
-        public void insert(Vector3 point)
+        public void insert(Vector3 point, List<Tree> AllNodes, ref int headind)
         {
             if (!boundary.isInside(point))
             {
                 return;
             }
-
+            
             if (level > 1)
             {
                 if (divided == false)
                 {
-                    subdivide();
+                    subdivide(AllNodes, ref headind);
                 }
 
                 for (int i = 0; i < 8; i++)
                 {
-                    child[i].insert(point);
+                    AllNodes[child[i]].insert(point, AllNodes, ref headind);
                 }
             }
             numpoints++;
@@ -89,6 +97,7 @@ public class Octree : MonoBehaviour
     }
 
     private Tree ot;
+    List<Tree> AllNodes = new List<Tree>();
 
     void show(Tree ot)
     {
@@ -106,7 +115,7 @@ public class Octree : MonoBehaviour
         {
             for (int i = 0; i < 8; i++)
             {
-                show(ot.child[i]);
+                show(AllNodes[ot.child[i]]);
             }
         }
     }
@@ -114,8 +123,11 @@ public class Octree : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        ot = new Tree(6, new Vector3(size / 2, size / 2, size / 2), size / 2);
-        for (float i = 0; i < 6; i += 0.1f) 
+        AllNodes.Add(new Tree(5, new Vector3(size / 2, size / 2, size / 2), size / 2));
+        headindex++;
+        //Tree noctreee = new Tree(1, new Vector3(size / 2, size / 2, size / 2), size / 2);
+        //AllNodes.Add(noctreee);
+        for (float i = 0; i < 6; i += 0.1f)
         {
             for (float j = 0; j < 6; j += 0.1f)
             {
@@ -124,12 +136,13 @@ public class Octree : MonoBehaviour
                     Vector3 pt = new Vector3(i, j, k);
                     if (Vector3.Distance(pt, Vector3.zero) < 6)
                     {
-                        ot.insert(pt);
+                        AllNodes[0].insert(pt, AllNodes, ref headindex);
                     }
                 }
             }
         }
-        ot.insert(new Vector3(4.1f, 5.1f, 2.1f));
+
+        //AllNodes[0].insert(new Vector3(4.1f, 5.1f, 2.1f), AllNodes, ref headindex);
         //for (int i = 0; i < 8; i++)
         //{
         //    for (int j = 0; j < 8; j++)
@@ -137,11 +150,13 @@ public class Octree : MonoBehaviour
         //        Debug.Log(((ot.child[i]).child[j]).numpoints);
         //    }
         //}
-        show(ot);
+        show(AllNodes[0]);
     }
 
     // Update is called once per frame
     void Update()
     {
+        Debug.Log("headindex: " + headindex);
+        Debug.Log("count: " + AllNodes.Count);
     }
 }
