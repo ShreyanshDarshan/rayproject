@@ -7,10 +7,10 @@ public class OctreeArray : MonoBehaviour
     public float size = 10.0f;
     int headindex = 0;
 
-    class Square
+    struct Square
     {
-        public Vector3 pos = new Vector3();
-        public float w = 0f;
+        public Vector3 pos;
+        public float w;
 
         public bool isInside(Vector3 point)
         {
@@ -24,11 +24,11 @@ public class OctreeArray : MonoBehaviour
                 );
         }
     }
-    class Tree
+    struct Tree
     {
-        public Square boundary = new Square();
+        public Square boundary;
         public float numpoints;
-        public int[] child = new int[8];     //lower sw, se, ne, sw | upper sw, se, ne, sw
+        public int[] child;     //lower sw, se, ne, sw | upper sw, se, ne, sw
         public int level;
         public bool divided;
 
@@ -36,16 +36,18 @@ public class OctreeArray : MonoBehaviour
         {
             divided = false;
             level = level_;
+            boundary = new Square();
             boundary.pos = pos;
             boundary.w = w;
             numpoints = 0;
+            child = new int[8];
             for (int i = 0; i < 8; i++)
             {
                 child[i] = -1;
             }
         }
 
-        public void subdivide(List<Tree> AllNodes, ref int headind)
+        public void subdivide(Tree[] AllNodes, ref int headind)
         {
             if (level > 1)
             {
@@ -65,21 +67,23 @@ public class OctreeArray : MonoBehaviour
 
                 for (int i = 0; i < 8; i++)
                 {
-                    AllNodes.Add( new Tree(level - 1, centers[i], boundary.w / 2.0f) );
+                    AllNodes[headind] = ( new Tree(level - 1, centers[i], boundary.w / 2.0f) );
                     child[i] = headind;
                     headind++;
+                    //Debug.Log("headindex in function: " + headind);
                 }
                 divided = true;
             }
         }
 
-        public void insert(Vector3 point, List<Tree> AllNodes, ref int headind)
+        public void insert(Vector3 point, Tree[] AllNodes, ref int headind)
         {
             if (!boundary.isInside(point))
             {
                 return;
             }
-            
+
+
             if (level > 1)
             {
                 if (divided == false)
@@ -92,30 +96,31 @@ public class OctreeArray : MonoBehaviour
                     AllNodes[child[i]].insert(point, AllNodes, ref headind);
                 }
             }
-            numpoints++;
+            this.numpoints++;
+            //Debug.Log("inserting" + numpoints);
         }
     }
 
-    private Tree ot;
-    List<Tree> AllNodes = new List<Tree>();
+    Tree[] AllNodes = new Tree[32768];
 
-    void show(Tree ot)
+    void show(Tree[] AllNodes, int index)
     {
-        if (ot.numpoints > 0)
+        if (AllNodes[index].numpoints > 0)
         {
-            float S = 2 * ot.boundary.w;
+            //Debug.Log("entered");
+            float S = 2 * AllNodes[index].boundary.w;
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.position = ot.boundary.pos;
+            cube.transform.position = AllNodes[index].boundary.pos;
             cube.transform.localScale = new Vector3(S, S, S);
             cube.GetComponent<MeshRenderer>().enabled = false;
             cube.GetComponent<BoxCollider>().enabled = false;
         }
 
-        if (ot.level > 1 && ot.divided == true)
+        if (AllNodes[index].level > 1 && AllNodes[index].divided == true)
         {
             for (int i = 0; i < 8; i++)
             {
-                show(AllNodes[ot.child[i]]);
+                show(AllNodes, AllNodes[index].child[i]);
             }
         }
     }
@@ -123,7 +128,7 @@ public class OctreeArray : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        AllNodes.Add(new Tree(5, new Vector3(size / 2, size / 2, size / 2), size / 2));
+        AllNodes[headindex] = (new Tree(5, new Vector3(size / 2, size / 2, size / 2), size / 2));
         headindex++;
         //Tree noctreee = new Tree(1, new Vector3(size / 2, size / 2, size / 2), size / 2);
         //AllNodes.Add(noctreee);
@@ -141,8 +146,10 @@ public class OctreeArray : MonoBehaviour
                 }
             }
         }
-
+        Debug.Log("allnodes before " + AllNodes[0].numpoints);
+        
         //AllNodes[0].insert(new Vector3(4.1f, 5.1f, 2.1f), AllNodes, ref headindex);
+        //AllNodes[0].insert(new Vector3(4.1f, 2.1f, 2.1f), AllNodes, ref headindex);
         //for (int i = 0; i < 8; i++)
         //{
         //    for (int j = 0; j < 8; j++)
@@ -150,13 +157,14 @@ public class OctreeArray : MonoBehaviour
         //        Debug.Log(((ot.child[i]).child[j]).numpoints);
         //    }
         //}
-        show(AllNodes[0]);
+        Debug.Log("allnodes after " + AllNodes[0].numpoints);
+        show(AllNodes, 0);
     }
 
     // Update is called once per frame
     void Update()
     {
         Debug.Log("headindex: " + headindex);
-        Debug.Log("count: " + AllNodes.Count);
+        Debug.Log("count: " + AllNodes[0].boundary.w);
     }
 }

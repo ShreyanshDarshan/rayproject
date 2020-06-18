@@ -1,5 +1,8 @@
-﻿using UnityEngine;
-public class RayTracingMaster : MonoBehaviour
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class RayMarchingMaster : MonoBehaviour
 {
     public ComputeShader RayTracingShader;
     private RenderTexture _target;
