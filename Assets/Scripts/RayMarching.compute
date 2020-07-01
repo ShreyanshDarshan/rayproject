@@ -7,13 +7,16 @@ SamplerState sampler_SkyboxTexture;
 static const float PI = 3.14159265f;
 float2 _PixelOffset;
 
-struct Node
-{
-	float4 boundary;
-	int numpoints;
-	int child[8];
-	int level;
-};
+//struct Node
+//{
+//	float4 boundary;
+//	int numpoints;
+//	int child[8];
+//	int level;
+//	bool divided;
+//};
+//
+//RWStructuredBuffer<Node> octree;
 
 struct Ray
 {
@@ -43,15 +46,42 @@ RayHit CreateRayHit()
 	hit.normal = float3(0.0f, 0.0f, 0.0f);
 	return hit;
 }
-void IntersectGroundPlane(Ray ray, inout RayHit bestHit)
+
+void IntersectYPlane(Ray ray, inout RayHit bestHit, float3 square, float side)
 {
 	// Calculate distance along the ray where the ground plane is intersected
-	float t = -ray.origin.y / ray.direction.y;
+	float t = (square.y - ray.origin.y) / ray.direction.y;
+	float3 hitSpot = ray.origin + t * ray.direction;
+	float hitDist = max (abs(hitSpot.x - square.x), abs(hitSpot.z - square.z));
+	if (t > 0 && t < bestHit.distance && hitDist < side/2)
+	{
+		bestHit.distance = t;
+		bestHit.position = hitSpot;
+		bestHit.normal = float3(0.0f, 1.0f, 0.0f);
+	}
+}
+
+void IntersectZPlane(Ray ray, inout RayHit bestHit)
+{
+	// Calculate distance along the ray where the ground plane is intersected
+	float t = -ray.origin.z / ray.direction.z;
 	if (t > 0 && t < bestHit.distance)
 	{
 		bestHit.distance = t;
 		bestHit.position = ray.origin + t * ray.direction;
-		bestHit.normal = float3(0.0f, 1.0f, 0.0f);
+		bestHit.normal = float3(0.0f, 0.0f, 1.0f);
+	}
+}
+
+void InstersectXPlane(Ray ray, inout RayHit bestHit)
+{
+	// Calculate distance along the ray where the ground plane is intersected
+	float t = -ray.origin.x / ray.direction.x;
+	if (t > 0 && t < bestHit.distance)
+	{
+		bestHit.distance = t;
+		bestHit.position = ray.origin + t * ray.direction;
+		bestHit.normal = float3(1.0f, 0.0f, 0.0f);
 	}
 }
 
@@ -76,7 +106,8 @@ void IntersectSphere(Ray ray, inout RayHit bestHit, float4 sphere)
 RayHit Trace(Ray ray)
 {
 	RayHit bestHit = CreateRayHit();
-	IntersectGroundPlane(ray, bestHit);
+	IntersectYPlane(ray, bestHit, float3(1.0f, -1.0f, 10.0f), 2.0f);
+	//IntersectYPlane(ray, bestHit);
 	// Add a floating unit sphere
 	IntersectSphere(ray, bestHit, float4(0, 3.0f, 0, 1.0f));
 	return bestHit;

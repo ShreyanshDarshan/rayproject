@@ -1,13 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 public class OctreeArray : MonoBehaviour
 {
     public float size = 10.0f;
-    int headindex = 0;
+    public int headindex = 0;
 
-    struct Square
+    public struct Square
     {
         public Vector3 pos;
         public float w;
@@ -24,11 +25,24 @@ public class OctreeArray : MonoBehaviour
                 );
         }
     }
-    struct Tree
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    unsafe struct tempstruct
+    {
+        Vector3 pos;    // 3 * 4
+        float w;    // 4
+        float numpoints;    // 4
+        unsafe fixed int child[8];  // 8 * 4
+        int level;  // 4
+        bool divided;   // 1
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    unsafe public struct Tree
     {
         public Square boundary;
-        public float numpoints;
-        public int[] child;     //lower sw, se, ne, sw | upper sw, se, ne, sw
+        public int numpoints;
+        unsafe public fixed int child[8];     //lower sw, se, ne, sw | upper sw, se, ne, sw
         public int level;
         public bool divided;
 
@@ -40,7 +54,7 @@ public class OctreeArray : MonoBehaviour
             boundary.pos = pos;
             boundary.w = w;
             numpoints = 0;
-            child = new int[8];
+            //child = new int[8];
             for (int i = 0; i < 8; i++)
             {
                 child[i] = -1;
@@ -101,9 +115,9 @@ public class OctreeArray : MonoBehaviour
         }
     }
 
-    Tree[] AllNodes = new Tree[32768];
+    public Tree[] AllNodes = new Tree[32768];
 
-    void show(Tree[] AllNodes, int index)
+    unsafe void show(Tree[] AllNodes, int index)
     {
         if (AllNodes[index].numpoints > 0)
         {
@@ -165,6 +179,7 @@ public class OctreeArray : MonoBehaviour
     void Update()
     {
         Debug.Log("headindex: " + headindex);
-        Debug.Log("count: " + AllNodes[0].boundary.w);
+        Debug.Log("sizeof: " + Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf(typeof(Tree)));
+        Debug.Log("Sizeoftemp " + Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf(typeof(tempstruct)));
     }
 }

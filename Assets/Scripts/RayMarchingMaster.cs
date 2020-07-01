@@ -9,7 +9,7 @@ public class RayMarchingMaster : MonoBehaviour
     private uint _currentSample = 0;
     private Material _addMaterial;
     public Texture SkyboxTexture;
-
+    public OctreeArray TreeArray;
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         SetShaderParameters();
@@ -17,6 +17,9 @@ public class RayMarchingMaster : MonoBehaviour
     }
     private void Render(RenderTexture destination)
     {
+        //var buffer = new ComputeBuffer(TreeArray.headindex, 57);
+        //buffer.SetData(TreeArray.AllNodes);
+        //RayTracingShader.SetBuffer(0, "octree", buffer);
         // Make sure we have a current render target
         InitRenderTexture();
         // Set the target and dispatch the compute shader

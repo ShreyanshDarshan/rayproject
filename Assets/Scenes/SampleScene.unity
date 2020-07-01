@@ -350,7 +350,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
   m_LocalRotation: {x: 0.0031097904, y: -0.0015181401, z: 0.0058538984, w: 0.99997693}
-  m_LocalPosition: {x: 0, y: 4.65, z: -10}
+  m_LocalPosition: {x: -1.57, y: 4.65, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -370,6 +370,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   RayTracingShader: {fileID: 7200000, guid: cc61fd03fc32016498d8eee376ae7ba5, type: 3}
   SkyboxTexture: {fileID: 2800000, guid: f5b6dfe55b19db34cb7dd2a4ff2e2580, type: 3}
+  TreeArray: {fileID: 929338238}
 --- !u!114 &534669907
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -458,3 +459,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   size: 10
+  headindex: 0
