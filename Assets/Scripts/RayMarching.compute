@@ -47,12 +47,12 @@ RayHit CreateRayHit()
 	return hit;
 }
 
-void IntersectYPlane(Ray ray, inout RayHit bestHit, float3 square, float side)
+void IntersectYPlane(Ray ray, inout RayHit bestHit, float3 center, float side)
 {
 	// Calculate distance along the ray where the ground plane is intersected
-	float t = (square.y - ray.origin.y) / ray.direction.y;
+	float t = (center.y - ray.origin.y) / ray.direction.y;
 	float3 hitSpot = ray.origin + t * ray.direction;
-	float hitDist = max (abs(hitSpot.x - square.x), abs(hitSpot.z - square.z));
+	float hitDist = max (abs(hitSpot.x - center.x), abs(hitSpot.z - center.z));
 	if (t > 0 && t < bestHit.distance && hitDist < side/2)
 	{
 		bestHit.distance = t;
@@ -61,12 +61,12 @@ void IntersectYPlane(Ray ray, inout RayHit bestHit, float3 square, float side)
 	}
 }
 
-//void IntersectYPlane(Ray ray, inout RayHit bestHit, float3 square, float side)
+//void IntersectYPlane(Ray ray, inout RayHit bestHit, float3 center, float side)
 //{
 //	// Calculate distance along the ray where the ground plane is intersected
-//	float t = (square.y - ray.origin.y) / ray.direction.y;
+//	float t = (center.y - ray.origin.y) / ray.direction.y;
 //	float3 hitSpot = ray.origin + t * ray.direction;
-//	float hitDist = max (abs(hitSpot.x - square.x), abs(hitSpot.z - square.z));
+//	float hitDist = max (abs(hitSpot.x - center.x), abs(hitSpot.z - center.z));
 //	if (t > 0 && t < bestHit.distance && hitDist < side/2)
 //	{
 //		bestHit.distance = t;
@@ -75,12 +75,12 @@ void IntersectYPlane(Ray ray, inout RayHit bestHit, float3 square, float side)
 //	}
 //}
 
-void IntersectZPlane(Ray ray, inout RayHit bestHit, float3 square, float side)
+void IntersectZPlane(Ray ray, inout RayHit bestHit, float3 center, float side)
 {
 	// Calculate distance along the ray where the ground plane is intersected
-	float t = (square.z - ray.origin.z) / ray.direction.z;
+	float t = (center.z - ray.origin.z) / ray.direction.z;
 	float3 hitSpot = ray.origin + t * ray.direction;
-	float hitDist = max(abs(hitSpot.x - square.x), abs(hitSpot.y - square.y));
+	float hitDist = max(abs(hitSpot.x - center.x), abs(hitSpot.y - center.y));
 	if (t > 0 && t < bestHit.distance && hitDist < side / 2)
 	{
 		bestHit.distance = t;
@@ -89,12 +89,12 @@ void IntersectZPlane(Ray ray, inout RayHit bestHit, float3 square, float side)
 	}
 }
 
-void IntersectXPlane(Ray ray, inout RayHit bestHit, float3 square, float side)
+void IntersectXPlane(Ray ray, inout RayHit bestHit, float3 center, float side)
 {
 	// Calculate distance along the ray where the ground plane is intersected
-	float t = (square.x - ray.origin.x) / ray.direction.x;
+	float t = (center.x - ray.origin.x) / ray.direction.x;
 	float3 hitSpot = ray.origin + t * ray.direction;
-	float hitDist = max(abs(hitSpot.z - square.z), abs(hitSpot.y - square.y));
+	float hitDist = max(abs(hitSpot.z - center.z), abs(hitSpot.y - center.y));
 	if (t > 0 && t < bestHit.distance && hitDist < side / 2)
 	{
 		bestHit.distance = t;
@@ -121,18 +121,36 @@ void IntersectSphere(Ray ray, inout RayHit bestHit, float4 sphere)
 	}
 }
 
+void IntersectCube(Ray ray, inout RayHit bestHit, float3 center, float side)
+{
+	for (float i = -1; i <= 1; i++)
+	{
+		IntersectXPlane(ray, bestHit, center + float3(i * side / 2, 0.0f, 0.0f), side);
+		IntersectYPlane(ray, bestHit, center + float3(0.0f, i * side / 2, 0.0f), side);
+		IntersectZPlane(ray, bestHit, center + float3(0.0f, 0.0f, i * side / 2), side);
+	}
+}
+
 RayHit Trace(Ray ray)
 {
 	RayHit bestHit = CreateRayHit();
-	for (float i = -1; i <= 1; i++)
+	int num = 20;
+	for (int i = 0; i < num; i++)
+	{
+		for (int j = 0; j < num-i; j++)
+		{
+			IntersectCube(ray, bestHit, float3 (j+i, j, i), 1);
+		}
+	}
+	/*for (float i = -1; i <= 1; i++)
 	{
 		IntersectXPlane(ray, bestHit, float3(1.0f + i, -1.0f, 1.0f), 2.0f);
 		IntersectYPlane(ray, bestHit, float3(1.0f, -1.0f + i, 1.0f), 2.0f);
 		IntersectZPlane(ray, bestHit, float3(1.0f, -1.0f, 1.0f + i), 2.0f);
-	}
+	}*/
 	//IntersectYPlane(ray, bestHit);
 	// Add a floating unit sphere
-	IntersectSphere(ray, bestHit, float4(0, 3.0f, 0, 1.0f));
+	//IntersectSphere(ray, bestHit, float4(0, 3.0f, 0, 1.0f));
 	return bestHit;
 }
 

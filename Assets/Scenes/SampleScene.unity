@@ -431,7 +431,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   horizontalSensitivity: 200
   verticalSensitivity: 200
-  movementSpeed: 20
+  movementSpeed: 5
   playerbody: {fileID: 459711991}
 --- !u!1 &929338234
 GameObject:
