@@ -37,18 +37,18 @@ public class OctreeArray : MonoBehaviour
         bool divided;   // 1
     }
 
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    //[StructLayout(LayoutKind.Sequential, Pack = 1)]
     unsafe public struct Tree
     {
         public Square boundary;
         public int numpoints;
         unsafe public fixed int child[8];     //lower sw, se, ne, sw | upper sw, se, ne, sw
         public int level;
-        public bool divided;
+        public int divided;
 
         public Tree(int level_, Vector3 pos, float w)
         {
-            divided = false;
+            divided = 0;
             level = level_;
             boundary = new Square();
             boundary.pos = pos;
@@ -86,7 +86,7 @@ public class OctreeArray : MonoBehaviour
                     headind++;
                     //Debug.Log("headindex in function: " + headind);
                 }
-                divided = true;
+                divided = 1;
             }
         }
 
@@ -100,7 +100,7 @@ public class OctreeArray : MonoBehaviour
 
             if (level > 1)
             {
-                if (divided == false)
+                if (divided == 0)
                 {
                     subdivide(AllNodes, ref headind);
                 }
@@ -115,7 +115,7 @@ public class OctreeArray : MonoBehaviour
         }
     }
 
-    public Tree[] AllNodes = new Tree[32768];
+    public Tree[] AllNodes = new Tree[873];
 
     unsafe void show(Tree[] AllNodes, int index)
     {
@@ -130,7 +130,7 @@ public class OctreeArray : MonoBehaviour
             cube.GetComponent<BoxCollider>().enabled = false;
         }
 
-        if (AllNodes[index].level > 1 && AllNodes[index].divided == true)
+        if (AllNodes[index].level > 1 && AllNodes[index].divided == 1)
         {
             for (int i = 0; i < 8; i++)
             {
@@ -182,4 +182,17 @@ public class OctreeArray : MonoBehaviour
         Debug.Log("sizeof: " + Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf(typeof(Tree)));
         Debug.Log("Sizeoftemp " + Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf(typeof(tempstruct)));
     }
+
+    //byte[] getBytes(Tree[] Allnodes, int array_size)
+    //{
+    //    int size = Marshal.SizeOf(Allnodes[0]);
+    //    byte[] arr = new byte[size*array_size];
+
+    //    IntPtr ptr = Marshal.AllocHGlobal(size);
+    //    for (int i=0; i<100)
+    //    Marshal.StructureToPtr(str, ptr, true);
+    //    Marshal.Copy(ptr, arr, 0, size);
+    //    Marshal.FreeHGlobal(ptr);
+    //    return arr;
+    //}
 }

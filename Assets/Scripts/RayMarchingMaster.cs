@@ -13,13 +13,13 @@ public class RayMarchingMaster : MonoBehaviour
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         SetShaderParameters();
-        Render(destination);
+        Render(destination);    
     }
     private void Render(RenderTexture destination)
     {
-        //var buffer = new ComputeBuffer(TreeArray.headindex, 57);
-        //buffer.SetData(TreeArray.AllNodes);
-        //RayTracingShader.SetBuffer(0, "octree", buffer);
+        var buffer = new ComputeBuffer(TreeArray.headindex, 60);
+        buffer.SetData(TreeArray.AllNodes);
+        RayTracingShader.SetBuffer(0, "octree", buffer);
         // Make sure we have a current render target
         InitRenderTexture();
         // Set the target and dispatch the compute shader
