@@ -166,14 +166,36 @@ bool IntersectCheckCube(Ray ray, inout RayHit bestHit, float3 center, float side
 	return intersected;
 }
 //
+bool checkOctree(Ray ray, inout RayHit bestHit, int i)
+{
+	return IntersectCheckCube(ray, bestHit, float3 (octree[i].boundary.x, octree[i].boundary.y, octree[i].boundary.z), octree[i].boundary.w * 2);
+}
+
 void traverseOctree(Ray ray, inout RayHit bestHit)
 {
 	int num = 873;
-	for (int i = 0; i < num; i++)
+	int stack[873];
+	int top = 0;
+	stack[0] = 0;
+	for (int frame = 0; frame < 800 && top>=0; frame++)
 	{
-		if (octree[i].level == 1 && octree[i].numpoints > 0)
+		int index = stack[top];
+		bool did_hit = checkOctree(ray, bestHit, index);
+		if (did_hit && octree[index].level != 1)
 		{
-			IntersectCube(ray, bestHit, float3 (octree[i].boundary.x, octree[i].boundary.y, octree[i].boundary.z), octree[i].boundary.w*2);
+			for (int k = 0; k < 8; k++)
+			{
+				stack[top+k] = octree[index].child[k];
+			}
+			top += 7;
+		}
+		else if (did_hit)
+		{
+			IntersectCube(ray, bestHit, float3 (octree[index].boundary.x, octree[index].boundary.y, octree[index].boundary.z), octree[index].boundary.w * 2);
+		}
+		else
+		{
+			top--;
 		}
 	}
 }
