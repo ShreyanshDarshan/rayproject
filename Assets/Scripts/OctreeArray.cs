@@ -115,7 +115,7 @@ public class OctreeArray : MonoBehaviour
         }
     }
 
-    public Tree[] AllNodes = new Tree[873];
+    public Tree[] AllNodes = new Tree[1623385];
 
     unsafe void show(Tree[] AllNodes, int index)
     {
@@ -142,18 +142,18 @@ public class OctreeArray : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        AllNodes[headindex] = (new Tree(5, new Vector3(size / 2, size / 2, size / 2), size / 2));
+        AllNodes[headindex] = (new Tree(9, new Vector3(size / 2, size / 2, size / 2), size / 2));
         headindex++;
         //Tree noctreee = new Tree(1, new Vector3(size / 2, size / 2, size / 2), size / 2);
         //AllNodes.Add(noctreee);
-        for (float i = 0; i < 6; i += 0.1f)
+        for (float i = 0; i < 6; i += 0.05f)
         {
-            for (float j = 0; j < 6; j += 0.1f)
+            for (float j = 0; j < 6; j += 0.05f)
             {
-                for (float k = 0; k < 6; k += 0.1f)
+                for (float k = 0; k < 6; k += 0.05f)
                 {
                     Vector3 pt = new Vector3(i, j, k);
-                    if (Vector3.Distance(pt, Vector3.zero) < 6)
+                    if (Vector3.Distance(pt, new Vector3(3, 3, 3)) < 3 && Vector3.Distance(pt, new Vector3(3, 3, 3)) > 2)
                     {
                         AllNodes[0].insert(pt, AllNodes, ref headindex);
                     }
@@ -172,15 +172,15 @@ public class OctreeArray : MonoBehaviour
         //    }
         //}
         Debug.Log("allnodes after " + AllNodes[0].numpoints);
-        show(AllNodes, 0);
+        //show(AllNodes, 0);
     }
 
     // Update is called once per frame
     void Update()
     {
         Debug.Log("headindex: " + headindex);
-        Debug.Log("sizeof: " + Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf(typeof(Tree)));
-        Debug.Log("Sizeoftemp " + Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf(typeof(tempstruct)));
+        Debug.Log("sizeof: " + 214985*Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf(typeof(Tree)));
+        //Debug.Log("Sizeoftemp " + Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf(typeof(tempstruct)));
     }
 
     //byte[] getBytes(Tree[] Allnodes, int array_size)

@@ -35,6 +35,7 @@ public class RayMarchingMaster : MonoBehaviour
         _addMaterial.SetFloat("_Sample", _currentSample);
         Graphics.Blit(_target, destination, _addMaterial);
         _currentSample++;
+        buffer.Dispose();
     }
     private void InitRenderTexture()
     {
