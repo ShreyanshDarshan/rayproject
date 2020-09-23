@@ -10,6 +10,7 @@ public class RayMarchingMaster : MonoBehaviour
     private Material _addMaterial;
     public Texture SkyboxTexture;
     public OctreeArray TreeArray;
+    private ComputeBuffer buffer;
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         SetShaderParameters();
@@ -17,9 +18,6 @@ public class RayMarchingMaster : MonoBehaviour
     }
     private void Render(RenderTexture destination)
     {
-        var buffer = new ComputeBuffer(TreeArray.headindex, 60);
-        buffer.SetData(TreeArray.AllNodes);
-        RayTracingShader.SetBuffer(0, "octree", buffer);
         // Make sure we have a current render target
         InitRenderTexture();
         // Set the target and dispatch the compute shader
@@ -35,7 +33,7 @@ public class RayMarchingMaster : MonoBehaviour
         _addMaterial.SetFloat("_Sample", _currentSample);
         Graphics.Blit(_target, destination, _addMaterial);
         _currentSample++;
-        buffer.Dispose();
+        //buffer.Dispose();
     }
     private void InitRenderTexture()
     {
@@ -63,15 +61,19 @@ public class RayMarchingMaster : MonoBehaviour
     }
 
     private Camera _camera;
-    private void Awake()
+    private void Start()
     {
         _camera = GetComponent<Camera>();
+        buffer = new ComputeBuffer(TreeArray.headindex, 60);
+        buffer.SetData(TreeArray.AllNodes);
     }
+
     private void SetShaderParameters()
     {
         RayTracingShader.SetMatrix("_CameraToWorld", _camera.cameraToWorldMatrix);
         RayTracingShader.SetMatrix("_CameraInverseProjection", _camera.projectionMatrix.inverse);
         RayTracingShader.SetTexture(0, "_SkyboxTexture", SkyboxTexture);
         RayTracingShader.SetVector("_PixelOffset", new Vector2(Random.value, Random.value));
+        RayTracingShader.SetBuffer(0, "octree", buffer);
     }
 }

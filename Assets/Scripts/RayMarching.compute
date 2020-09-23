@@ -57,7 +57,7 @@ void IntersectYPlane(Ray ray, inout RayHit bestHit, float3 center, float side)
 	{
 		bestHit.distance = t;
 		bestHit.position = hitSpot;
-		//bestHit.normal = float3(0.0f, 1.0f, 0.0f);
+		bestHit.normal = float3(0.0f, 1.0f, 0.0f);
 	}
 }
 
@@ -71,7 +71,7 @@ void IntersectZPlane(Ray ray, inout RayHit bestHit, float3 center, float side)
 	{
 		bestHit.distance = t;
 		bestHit.position = hitSpot;
-		//bestHit.normal = float3(0.0f, 0.0f, 1.0f);
+		bestHit.normal = float3(0.0f, 0.0f, 1.0f);
 	}
 }
 
@@ -85,40 +85,46 @@ void IntersectXPlane(Ray ray, inout RayHit bestHit, float3 center, float side)
 	{
 		bestHit.distance = t;
 		bestHit.position = hitSpot;
-		//bestHit.normal = float3(1.0f, 0.0f, 0.0f);
+		bestHit.normal = float3(1.0f, 0.0f, 0.0f);
 	}
 }
 
-bool IntersectCheckYPlane(Ray ray, inout RayHit bestHit, float3 center, float side)
+bool IntersectCheckYPlane(Ray ray, inout RayHit bestHit, float3 center, float side, inout float d)
 {
 	// Calculate distance along the ray where the ground plane is intersected
 	float t = (center.y - ray.origin.y) / ray.direction.y;
 	float3 hitSpot = ray.origin + t * ray.direction;
 	float hitDist = max(abs(hitSpot.x - center.x), abs(hitSpot.z - center.z));
+	if (t > 0)
+		d = min(d, t);
 	if (t > 0 && t < bestHit.distance && hitDist < side / 2)
 	{
 		return true;
 	}
 	return false;
 }
-bool IntersectCheckXPlane(Ray ray, inout RayHit bestHit, float3 center, float side)
+bool IntersectCheckXPlane(Ray ray, inout RayHit bestHit, float3 center, float side, inout float d)
 {
 	// Calculate distance along the ray where the ground plane is intersected
 	float t = (center.x - ray.origin.x) / ray.direction.x;
 	float3 hitSpot = ray.origin + t * ray.direction;
 	float hitDist = max(abs(hitSpot.y - center.y), abs(hitSpot.z - center.z));
+	if (t > 0)
+		d = min(d, t);
 	if (t > 0 && t < bestHit.distance && hitDist < side / 2)
 	{
 		return true;
 	}
 	return false;
 }
-bool IntersectCheckZPlane(Ray ray, inout RayHit bestHit, float3 center, float side)
+bool IntersectCheckZPlane(Ray ray, inout RayHit bestHit, float3 center, float side, inout float d)
 {
 	// Calculate distance along the ray where the ground plane is intersected
 	float t = (center.z - ray.origin.z) / ray.direction.z;
 	float3 hitSpot = ray.origin + t * ray.direction;
 	float hitDist = max(abs(hitSpot.x - center.x), abs(hitSpot.y - center.y));
+	if (t > 0)
+		d = min(d, t);
 	if (t > 0 && t < bestHit.distance && hitDist < side / 2)
 	{
 		return true;
@@ -154,60 +160,110 @@ void IntersectCube(Ray ray, inout RayHit bestHit, float3 center, float side)
 	}
 }
 
-bool IntersectCheckCube(Ray ray, inout RayHit bestHit, float3 center, float side)
+bool IntersectCheckCube(Ray ray, inout RayHit bestHit, float3 center, float side, inout float d)
 {
 	bool intersected = false;
+	d = 1000000000;
 	for (float i = -1; i <= 1; i+=2)
 	{
-		if (intersected = intersected || IntersectCheckXPlane(ray, bestHit, center + float3(i * side / 2, 0.0f, 0.0f), side))
-		{
-			break;
-		}
-		if (intersected = intersected || IntersectCheckYPlane(ray, bestHit, center + float3(0.0f, i * side / 2, 0.0f), side))
-		{
-			break;
-		}
-		if (intersected = intersected || IntersectCheckZPlane(ray, bestHit, center + float3(0.0f, 0.0f, i * side / 2), side))
-		{
-			break;
-		}
+		intersected = intersected || IntersectCheckXPlane(ray, bestHit, center + float3(i * side / 2, 0.0f, 0.0f), side, d);
+
+		intersected = intersected || IntersectCheckYPlane(ray, bestHit, center + float3(0.0f, i * side / 2, 0.0f), side, d);
+
+		intersected = intersected || IntersectCheckZPlane(ray, bestHit, center + float3(0.0f, 0.0f, i * side / 2), side, d);
+
 	}
+	//if (!intersected)
+		d = -1;
 	return intersected;
 }
 //
-bool checkOctree(Ray ray, inout RayHit bestHit, int i)
+void checkOctree(Ray ray, inout RayHit bestHit, int ind, inout float dist[8])
 {
-	return IntersectCheckCube(ray, bestHit, float3 (octree[i].boundary.x, octree[i].boundary.y, octree[i].boundary.z), octree[i].boundary.w * 2);
+	for (int i = 0; i < 8; i++)
+	{
+		if (octree[ind].child[i] >= 0)
+		{
+			if (IntersectCheckCube(ray, bestHit, float3(octree[octree[ind].child[i]].boundary.x, octree[octree[ind].child[i]].boundary.y, octree[octree[ind].child[i]].boundary.z), octree[octree[ind].child[i]].boundary.w * 2, dist[i]) == false)
+			{
+				dist[i] = -1;
+			}
+		}
+	}	
+}
+void selectionSort(inout int arr[8], float dist[8])
+{
+	int i, j, min_idx;
+	for (i = 0; i < 8; i++)
+	{
+		// initialise the array
+		arr[i] = i;
+	}
+	// One by one move boundary of unsorted subarray  
+	for (i = 0; i < 7; i++)
+	{
+		// Find the minimum element in unsorted array  
+		min_idx = i;
+		for (j = i + 1; j < 8; j++)
+		{
+			if (dist[arr[j]] < arr[arr[min_idx]])
+			{
+				min_idx = j;
+			}
+		}
+		// Swap the found minimum element with the first element  
+		int temp = arr[min_idx];
+		arr[min_idx] = arr[i];
+		arr[i] = temp;
+	}
 }
 
 void traverseOctree(Ray ray, inout RayHit bestHit)
 {
 	int num = 214985;
 	int stack[1000];
-	int top = 0;
-	stack[0] = 0;
-	for (int frame = 0; frame < num && top>=0; frame++)
+	// If biggest cube intersects, then enter into stack traversal
+	float d_orig;
+	if (IntersectCheckCube(ray, bestHit, float3 (octree[0].boundary.x, octree[0].boundary.y, octree[0].boundary.z), octree[0].boundary.w * 2, d_orig))
 	{
-		int index = stack[top];
-		bool did_hit = checkOctree(ray, bestHit, index);
-		if (did_hit && octree[index].level != 1)
+		int indexes[8];
+		float dist[8];
+		
+		checkOctree(ray, bestHit, 0, dist);
+		selectionSort(indexes, dist);
+		
+		int top = -1;
+		for (int i = 7; i >= 0; i--)
 		{
-			for (int k = 0; k < 8; k++)
+			if (dist[i] >= 0 && indexes[i]>=0)
 			{
-				stack[top+k] = octree[index].child[k];
+				top++;
+				stack[top] = octree[0].child[indexes[i]];
 			}
-			top += 7;
-			ray.energy *= 0.99;
-			bestHit.normal = ray.energy;
 		}
-		else if (did_hit)
-		{
-			IntersectCube(ray, bestHit, float3 (octree[index].boundary.x, octree[index].boundary.y, octree[index].boundary.z), octree[index].boundary.w * 2);
-		}
-		else
-		{
-			top--;
-		}
+		IntersectCube(ray, bestHit, float3(octree[stack[top]].boundary.x, octree[stack[top]].boundary.y, octree[stack[top]].boundary.z), octree[stack[top]].boundary.w * 2);
+		//for (int frame = 0; frame < 1; frame++)//num && top>=0; frame++)
+		//{
+		//	int index = stack[top];
+		//	if (octree[index].level != 1)
+		//	{
+		//		for (int k = 0; k < 8; k++)
+		//		{
+		//			stack[top + k] = octree[index].child[k];
+		//		}
+		//		top += 7;
+		//		ray.energy *= 0.99;
+		//		bestHit.normal = ray.energy;
+		//	}
+		//	else if (did_hit)
+		//	{
+		//		IntersectCube(ray, bestHit, float3(octree[index].boundary.x, octree[index].boundary.y, octree[index].boundary.z), octree[index].boundary.w * 2);
+		//	}
+		//	else
+		//	{
+		//		top--;
+		//	}
+		//}
 	}
 
 	//for (int index = 0; index < num; index++)
@@ -219,23 +275,7 @@ void traverseOctree(Ray ray, inout RayHit bestHit)
 	//}
 }
 
-/*
-if (cur.level == 1)
-		{
-			IntersectCube(ray, bestHit, float3 (cur.boundary.x, cur.boundary.y, cur.boundary.z), cur.boundary.w);
-		}
-		else
-		{
-			for (int i = 0; i < 8; i++)
-			{
-				Node child = octree[cur.child[i]];
-				if (IntersectCheckCube(ray, bestHit, float3 (child.boundary.x, child.boundary.y, child.boundary.z), child.boundary.w))
-				{
-					traverseOctree(ray, bestHit, child);
-				}
-			}
-		}
-*/
+
 
 RayHit Trace(Ray ray)
 {

@@ -6,6 +6,7 @@ public class CameraController : MonoBehaviour
 {
     public float horizontalSensitivity = 1.0f;
     public float verticalSensitivity = 1.0f;
+    public float flySensitivity = 1.0f;
     public float movementSpeed = 0.01f;
     public Transform playerbody;
     float mouseX;
@@ -31,5 +32,13 @@ public class CameraController : MonoBehaviour
 
         playerbody.Translate(playerbody.InverseTransformDirection(transform.forward) * Input.GetAxis("Vertical") * movementSpeed * Time.deltaTime);
         playerbody.Translate(playerbody.InverseTransformDirection(playerbody.right) * Input.GetAxis("Horizontal") * movementSpeed * Time.deltaTime);
+        if (Input.GetKey(KeyCode.Space))
+        {
+            playerbody.Translate(playerbody.up * flySensitivity * Time.deltaTime);
+        }
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            playerbody.Translate(-playerbody.up * flySensitivity * Time.deltaTime);
+        }
     }
 }

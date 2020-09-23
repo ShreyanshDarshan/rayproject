@@ -140,7 +140,7 @@ public class OctreeArray : MonoBehaviour
     }
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         AllNodes[headindex] = (new Tree(9, new Vector3(size / 2, size / 2, size / 2), size / 2));
         headindex++;
