@@ -7,6 +7,7 @@ public class OctreeArray : MonoBehaviour
 {
     public float size = 10.0f;
     public int headindex = 0;
+    public Material transp;
 
     public struct Square
     {
@@ -119,18 +120,18 @@ public class OctreeArray : MonoBehaviour
 
     unsafe void show(Tree[] AllNodes, int index)
     {
-        if (AllNodes[index].numpoints > 0)
+        if (AllNodes[index].numpoints > 0 && AllNodes[index].level == 5)
         {
             //Debug.Log("entered");
             float S = 2 * AllNodes[index].boundary.w;
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.position = AllNodes[index].boundary.pos;
             cube.transform.localScale = new Vector3(S, S, S);
-            cube.GetComponent<MeshRenderer>().enabled = false;
+            cube.GetComponent<MeshRenderer>().material = transp;
             cube.GetComponent<BoxCollider>().enabled = false;
         }
 
-        if (AllNodes[index].level > 1 && AllNodes[index].divided == 1)
+        if (AllNodes[index].level > 5 && AllNodes[index].divided == 1)
         {
             for (int i = 0; i < 8; i++)
             {
@@ -172,7 +173,7 @@ public class OctreeArray : MonoBehaviour
         //    }
         //}
         Debug.Log("allnodes after " + AllNodes[0].numpoints);
-        //show(AllNodes, 0);
+        show(AllNodes, 0);
     }
 
     // Update is called once per frame

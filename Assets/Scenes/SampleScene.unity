@@ -541,3 +541,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   size: 10
   headindex: 0
+  transp: {fileID: 2100000, guid: c3a34f12aca84c94393cbc2821b716b0, type: 2}

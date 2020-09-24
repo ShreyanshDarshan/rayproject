@@ -14,7 +14,7 @@ public class RayMarchingMaster : MonoBehaviour
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         SetShaderParameters();
-        Render(destination);    
+        Render(destination);
     }
     private void Render(RenderTexture destination)
     {
@@ -33,7 +33,6 @@ public class RayMarchingMaster : MonoBehaviour
         _addMaterial.SetFloat("_Sample", _currentSample);
         Graphics.Blit(_target, destination, _addMaterial);
         _currentSample++;
-        //buffer.Dispose();
     }
     private void InitRenderTexture()
     {
@@ -75,5 +74,11 @@ public class RayMarchingMaster : MonoBehaviour
         RayTracingShader.SetTexture(0, "_SkyboxTexture", SkyboxTexture);
         RayTracingShader.SetVector("_PixelOffset", new Vector2(Random.value, Random.value));
         RayTracingShader.SetBuffer(0, "octree", buffer);
+    }
+
+    private void OnApplicationQuit()
+    {
+        buffer.Dispose();
+        Debug.Log("Disposing Compute Buffer");
     }
 }
