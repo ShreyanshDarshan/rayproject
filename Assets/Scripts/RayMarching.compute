@@ -307,15 +307,14 @@ void traverseOctree(Ray ray, inout RayHit bestHit)
 			}
 		}
 		//if(went)
-        bestHit.normal = dot(bestHit.normal, float3(0.5, 0.7, 1)) * bestHit.position / 10; //ray.energy;        
+        //ray.energy;        
         //if (dist[i]>=0)
         //{
         //}
         //else
         //{
-        //    bestHit.normal = float3(0, 1 / float(-top), 0); //ray.energy
-        //}
-		
+        //rng_state = octree[stack[top]].boundary.x * 1000;
+        //bestHit.normal = float3(octree[stack[top]].boundary.x, octree[stack[top]].boundary.y, octree[stack[top]].boundary.z) / 10; //ray.energy		
 	}
 		//if (went)
 		//for (int frame = 0; frame < 1; frame++)//num && top>=0; frame++)
@@ -351,7 +350,7 @@ void traverseOctree(Ray ray, inout RayHit bestHit)
 
 
 
-RayHit Trace(Ray ray)
+RayHit Trace(inout Ray ray)
 {
 	RayHit bestHit = CreateRayHit();
 	/*int num = octree[10].level;
@@ -364,7 +363,24 @@ RayHit Trace(Ray ray)
 	}*/
 
 	traverseOctree(ray, bestHit);
-
+    if (bestHit.distance < 1.#INF)
+    {
+        ray.energy *= 0.6;
+        ray.origin = bestHit.position - 0.01f * ray.direction;
+        ray.direction = reflect(ray.direction, -bestHit.normal) + 0.01 * sin(10000 * bestHit.position.x + 10000 * bestHit.position.z + 10000 * bestHit.position.y);
+        bestHit.distance = 1.#INF;
+        //ray.direction = -ray.direction;
+        RayHit bestHi = CreateRayHit();
+        traverseOctree(ray, bestHi);
+        if (bestHi.distance < 1.#INF)
+        {
+            bestHi.distance = 1.#INF;
+            ray.direction = reflect(ray.direction, -bestHi.normal) + 0.01 * sin(10000 * bestHit.position.x + 10000 * bestHit.position.z + 10000 * bestHit.position.y);;
+            ray.energy *= 0.6;
+        }
+        bestHi.normal = bestHi.position;
+        return bestHi;
+    }
 	/*for (float i = -1; i <= 1; i++)
 	{
 		IntersectXPlane(ray, bestHit, float3(1.0f + i, -1.0f, 1.0f), 2.0f);
@@ -405,14 +421,14 @@ float3 Shade(inout Ray ray, RayHit hit)
 	if (hit.distance < 1.#INF)
 	{
 		// Return the normal
-		return hit.normal;// *0.5f + 0.5f;
-	}
+        return hit.normal = dot(hit.normal, float3(0.5, 0.7, 1)) * hit.position / 10;; // *0.5f + 0.5f;
+    }
 	else
 	{
 		// Sample the skybox and write it
 		float theta = acos(ray.direction.y) / -PI;
 		float phi = atan2(ray.direction.x, -ray.direction.z) / -PI * 0.5f;
-		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
+		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz*ray.energy;
 	}
 }
 
@@ -429,7 +445,7 @@ Ray CreateCameraRay(float2 uv)
 	return CreateRay(origin, direction);
 }
 
-[numthreads(8, 8, 1)]
+[numthreads(32, 32, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
 	// Get the dimensions of the RenderTexture
