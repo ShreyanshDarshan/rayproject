@@ -116,11 +116,11 @@ public class OctreeArray : MonoBehaviour
         }
     }
 
-    public Tree[] AllNodes = new Tree[1623385];
+    public Tree[] AllNodes = new Tree[1320409];
 
     unsafe void show(Tree[] AllNodes, int index)
     {
-        if (AllNodes[index].numpoints > 0 && AllNodes[index].level == 5)
+        if (AllNodes[index].numpoints > 0 && AllNodes[index].level == 4)
         {
             //Debug.Log("entered");
             float S = 2 * AllNodes[index].boundary.w;
@@ -131,7 +131,7 @@ public class OctreeArray : MonoBehaviour
             cube.GetComponent<BoxCollider>().enabled = false;
         }
 
-        if (AllNodes[index].level > 5 && AllNodes[index].divided == 1)
+        if (AllNodes[index].level > 4 && AllNodes[index].divided == 1)
         {
             for (int i = 0; i < 8; i++)
             {
@@ -154,7 +154,7 @@ public class OctreeArray : MonoBehaviour
                 for (float k = 0; k < 6; k += 0.05f)
                 {
                     Vector3 pt = new Vector3(i, j, k);
-                    if (Vector3.Distance(pt, new Vector3(3, 3, 3)) < 3 && Vector3.Distance(pt, new Vector3(3, 3, 3)) > 2)
+                    if (Mathf.Sin(3 * i) * Mathf.Sin(3 * k) * Mathf.Sin(3 * j) * 3 > 0.5) //Vector3.Distance(pt, new Vector3(3, 3, 3)) < 3 && Vector3.Distance(pt, new Vector3(3, 3, 3)) > 2)
                     {
                         AllNodes[0].insert(pt, AllNodes, ref headindex);
                     }
@@ -173,7 +173,7 @@ public class OctreeArray : MonoBehaviour
         //    }
         //}
         Debug.Log("allnodes after " + AllNodes[0].numpoints);
-        show(AllNodes, 0);
+        //show(AllNodes, 0);
     }
 
     // Update is called once per frame

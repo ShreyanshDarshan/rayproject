@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class RayMarchingMaster : MonoBehaviour
 {
@@ -32,6 +33,7 @@ public class RayMarchingMaster : MonoBehaviour
             _addMaterial = new Material(Shader.Find("Hidden/AddShader"));
         _addMaterial.SetFloat("_Sample", _currentSample);
         Graphics.Blit(_target, destination, _addMaterial);
+        //GameObject.Find("RawImage").GetComponent<RawImage>().texture = _target;
         _currentSample++;
     }
     private void InitRenderTexture()
@@ -54,7 +56,7 @@ public class RayMarchingMaster : MonoBehaviour
     {
         if (transform.hasChanged)
         {
-            _currentSample = 0;
+            _currentSample = 1;
             transform.hasChanged = false;
         }
     }
@@ -72,7 +74,8 @@ public class RayMarchingMaster : MonoBehaviour
         RayTracingShader.SetMatrix("_CameraToWorld", _camera.cameraToWorldMatrix);
         RayTracingShader.SetMatrix("_CameraInverseProjection", _camera.projectionMatrix.inverse);
         RayTracingShader.SetTexture(0, "_SkyboxTexture", SkyboxTexture);
-        RayTracingShader.SetVector("_PixelOffset", new Vector2(Random.value, Random.value));
+        RayTracingShader.SetVector("_PixelOffset", new Vector2(Random.value, Random.value));//new Vector2(0, 0));
+        RayTracingShader.SetVector("_PixelRand", new Vector3(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f)));//new Vector2(0, 0));
         RayTracingShader.SetBuffer(0, "octree", buffer);
     }
 

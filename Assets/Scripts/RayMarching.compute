@@ -7,6 +7,7 @@ Texture2D<float4> _SkyboxTexture;
 SamplerState sampler_SkyboxTexture;
 static const float PI = 3.14159265f;
 float2 _PixelOffset;
+float3 _PixelRand;
 
 struct Node
 {
@@ -166,11 +167,11 @@ bool IntersectCheckCube(Ray ray, inout RayHit bestHit, float3 center, float side
 	bool intersected = false;
 	for (float i = -1; i <= 1; i+=2)
 	{
-		intersected = intersected || IntersectCheckXPlane(ray, bestHit, center + float3(i * side / 2, 0.0f, 0.0f), side, d);
+        intersected = intersected || IntersectCheckXPlane(ray, bestHit, center + float3(i * 0.999 * side / 2, 0.0f, 0.0f), side, d);
 
-		intersected = intersected || IntersectCheckYPlane(ray, bestHit, center + float3(0.0f, i * side / 2, 0.0f), side, d);
+        intersected = intersected || IntersectCheckYPlane(ray, bestHit, center + float3(0.0f, i * 0.999 * side / 2, 0.0f), side, d);
 
-		intersected = intersected || IntersectCheckZPlane(ray, bestHit, center + float3(0.0f, 0.0f, i * side / 2), side, d);
+        intersected = intersected || IntersectCheckZPlane(ray, bestHit, center + float3(0.0f, 0.0f, i * 0.999 * side / 2), side, d);
 
 	}
 	return intersected;
@@ -363,23 +364,29 @@ RayHit Trace(inout Ray ray)
 	}*/
 
 	traverseOctree(ray, bestHit);
+    for (int i = 0; i < 3; i++)
+    {
+        if (bestHit.distance < 1.#INF)
+        {
+            ray.energy *= (0.8 + bestHit.position * 0.05);
+            ray.origin = bestHit.position - 0.001f * ray.direction;
+            ray.direction = reflect(ray.direction, -bestHit.normal) + 0.05*_PixelRand;
+            bestHit.distance = 1.#INF;
+        //ray.direction = -ray.direction;
+            bestHit = CreateRayHit();
+            traverseOctree(ray, bestHit);
+            //if (bestHit.distance < 1.#INF)
+            //{
+            //    bestHit.distance = 1.#INF;
+            //    ray.direction = reflect(ray.direction, -bestHit.normal) +0.01 * sin(10000 * bestHit.position.x + 10000 * bestHit.position.z + 10000 * bestHit.position.y);;
+            //    ray.energy *= 0.6;
+            //}
+        }
+    }
     if (bestHit.distance < 1.#INF)
     {
-        ray.energy *= 0.6;
-        ray.origin = bestHit.position - 0.01f * ray.direction;
-        ray.direction = reflect(ray.direction, -bestHit.normal) + 0.01 * sin(10000 * bestHit.position.x + 10000 * bestHit.position.z + 10000 * bestHit.position.y);
         bestHit.distance = 1.#INF;
-        //ray.direction = -ray.direction;
-        RayHit bestHi = CreateRayHit();
-        traverseOctree(ray, bestHi);
-        if (bestHi.distance < 1.#INF)
-        {
-            bestHi.distance = 1.#INF;
-            ray.direction = reflect(ray.direction, -bestHi.normal) + 0.01 * sin(10000 * bestHit.position.x + 10000 * bestHit.position.z + 10000 * bestHit.position.y);;
-            ray.energy *= 0.6;
-        }
-        bestHi.normal = bestHi.position;
-        return bestHi;
+        bestHit.normal = bestHit.position;
     }
 	/*for (float i = -1; i <= 1; i++)
 	{
