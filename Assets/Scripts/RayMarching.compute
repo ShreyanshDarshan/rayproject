@@ -8,6 +8,15 @@ SamplerState sampler_SkyboxTexture;
 static const float PI = 3.14159265f;
 float2 _PixelOffset;
 float3 _PixelRand;
+float2 _Pixel;
+float _Seed;
+
+float rand()
+{
+    float result = frac(sin(_Seed / 100.0f * dot(_Pixel, float2(12.9898f, 78.233f))) * 43758.5453f);
+    _Seed += 1.0f;
+    return result;
+}
 
 struct Node
 {
@@ -364,14 +373,15 @@ RayHit Trace(inout Ray ray)
 	}*/
 
 	traverseOctree(ray, bestHit);
+    float distance;
     for (int i = 0; i < 3; i++)
     {
         if (bestHit.distance < 1.#INF)
         {
-            ray.energy *= (0.8 + bestHit.position * 0.05);
+            ray.energy *= (0.5 + bestHit.position * 0.08);
             ray.origin = bestHit.position - 0.001f * ray.direction;
-            ray.direction = reflect(ray.direction, -bestHit.normal) + 0.05*_PixelRand;
-            bestHit.distance = 1.#INF;
+            ray.direction = reflect(ray.direction, -bestHit.normal) + 0.04 * float3(rand(), rand(), rand());
+            distance = bestHit.distance;
         //ray.direction = -ray.direction;
             bestHit = CreateRayHit();
             traverseOctree(ray, bestHit);
@@ -457,6 +467,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 {
 	// Get the dimensions of the RenderTexture
 	uint width, height;
+    _Pixel = id.xy;
 	Result.GetDimensions(width, height);
 	// Transform pixel to [-1,1] range
 	//float2 uv = float2((id.xy + float2(0.5f, 0.5f)) / float2(width, height) * 2.0f - 1.0f);

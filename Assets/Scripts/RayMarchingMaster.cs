@@ -76,6 +76,7 @@ public class RayMarchingMaster : MonoBehaviour
         RayTracingShader.SetTexture(0, "_SkyboxTexture", SkyboxTexture);
         RayTracingShader.SetVector("_PixelOffset", new Vector2(Random.value, Random.value));//new Vector2(0, 0));
         RayTracingShader.SetVector("_PixelRand", new Vector3(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f)));//new Vector2(0, 0));
+        RayTracingShader.SetFloat("_Seed", Random.value);
         RayTracingShader.SetBuffer(0, "octree", buffer);
     }
 
