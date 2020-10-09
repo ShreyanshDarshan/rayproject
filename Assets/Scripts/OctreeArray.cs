@@ -116,7 +116,7 @@ public class OctreeArray : MonoBehaviour
         }
     }
 
-    public Tree[] AllNodes = new Tree[1320409];
+    public Tree[] AllNodes = new Tree[9972521];
 
     unsafe void show(Tree[] AllNodes, int index)
     {
@@ -143,15 +143,15 @@ public class OctreeArray : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        AllNodes[headindex] = (new Tree(9, new Vector3(size / 2, size / 2, size / 2), size / 2));
+        AllNodes[headindex] = (new Tree(10, new Vector3(size / 2, size / 2, size / 2), size / 2));
         headindex++;
         //Tree noctreee = new Tree(1, new Vector3(size / 2, size / 2, size / 2), size / 2);
         //AllNodes.Add(noctreee);
-        for (float i = 0; i < 6; i += 0.05f)
+        for (float i = 0; i < 6; i += 0.02f)
         {
-            for (float j = 0; j < 6; j += 0.05f)
+            for (float j = 0; j < 6; j += 0.02f)
             {
-                for (float k = 0; k < 6; k += 0.05f)
+                for (float k = 0; k < 6; k += 0.02f)
                 {
                     Vector3 pt = new Vector3(i, j, k);
                     if (Mathf.Sin(3 * i) * Mathf.Sin(3 * k) * Mathf.Sin(3 * j) * 3 > 0.5) //Vector3.Distance(pt, new Vector3(3, 3, 3)) < 3 && Vector3.Distance(pt, new Vector3(3, 3, 3)) > 2)

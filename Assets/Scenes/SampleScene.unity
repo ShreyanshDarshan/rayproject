@@ -435,6 +435,7 @@ MonoBehaviour:
   RayTracingShader: {fileID: 7200000, guid: cc61fd03fc32016498d8eee376ae7ba5, type: 3}
   SkyboxTexture: {fileID: 2800000, guid: f5b6dfe55b19db34cb7dd2a4ff2e2580, type: 3}
   TreeArray: {fileID: 929338238}
+  Roughness: 1
 --- !u!114 &534669907
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -461,10 +462,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 092304ebe23c4ca4eb74b6af99de06ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  horizontalSensitivity: 200
-  verticalSensitivity: 200
-  flySensitivity: 3
-  movementSpeed: 5
+  horizontalSensitivity: 100
+  verticalSensitivity: 100
+  flySensitivity: 1
+  movementSpeed: 2.5
   playerbody: {fileID: 459711991}
 --- !u!1 &929338234
 GameObject:
