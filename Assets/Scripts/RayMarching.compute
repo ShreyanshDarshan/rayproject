@@ -1,9 +1,9 @@
 ﻿#pragma kernel CSMain
 #pragma enable_d3d11_debug_symbols
-RWTexture2D<float4> Result;
-RWTexture2D<float4> PreviousFrame;
-RWTexture2D<float4> OldPos;
-RWTexture2D<float4> NewPos;
+globallycoherent RWTexture2D<float4> Result;
+globallycoherent RWTexture2D<float4> PreviousFrame;
+globallycoherent RWTexture2D<float4> OldPos;
+globallycoherent RWTexture2D<float4> NewPos;
 float4x4 _CameraToWorld;
 float4x4 _CameraInverseProjection;
 Texture2D<float4> _SkyboxTexture;
@@ -13,7 +13,7 @@ float4x4 _WorldToCamera;
 static const float PI = 3.14159265f;
 float2 _PixelOffset;
 float3 _PixelRand;
-
+//vector<float3> 
 float2 _Pixel;
 float _Seed;
 
@@ -40,6 +40,8 @@ struct Node
 	int child[8];
 	int level;
 	int divided;
+    float3 col;
+    int visited;
 };
 
 RWStructuredBuffer<Node> octree;
@@ -381,80 +383,44 @@ void traverseOctree(Ray ray, inout RayHit bestHit)
 RayHit Trace(inout Ray ray)
 {
 	RayHit bestHit = CreateRayHit();
-	/*int num = octree[10].level;
-	for (int i = 0; i < num; i++)
-	{
-		for (int j = 0; j < num-i; j++)
-		{
-			IntersectCube(ray, bestHit, float3 (j+i, j, i), 1);
-		}
-	}*/
 
 	traverseOctree(ray, bestHit);
     float distance = bestHit.distance;
     float3 position = bestHit.position;
     int id = bestHit.octreeid;
-    for (int i = 0; i < 0; i++)
+    if (octree[id].visited==0)
     {
-        if (bestHit.distance < 1.#INF)
+        for (int i = 0; i < 3; i++)
         {
-            ray.energy *= (0.5 + bestHit.position * 0.08);
-            ray.origin = bestHit.position - 0.001f * ray.direction;
-            ray.direction = (1 - _Roughness) * reflect(ray.direction, -bestHit.normal) + _Roughness * float3(rand() - 0.5, rand() - 0.5, rand() - 0.5);
-            ray.direction = normalize(ray.direction);
-            distance = bestHit.distance;
-            //ray.direction = -ray.direction;
-            bestHit = CreateRayHit();
-            traverseOctree(ray, bestHit);
-            //if (bestHit.distance < 1.#INF)
-            //{
-            //    bestHit.distance = 1.#INF;
-            //    ray.direction = reflect(ray.direction, -bestHit.normal) +0.01 * sin(10000 * bestHit.position.x + 10000 * bestHit.position.z + 10000 * bestHit.position.y);;
-            //    ray.energy *= 0.6;
-            //}
+            if (bestHit.distance < 1.#INF)
+            {
+                ray.energy *= (0.5 + bestHit.position * 0.08);
+                ray.origin = bestHit.position - 0.001f * ray.direction;
+                ray.direction = (1 - _Roughness) * reflect(ray.direction, -bestHit.normal) + _Roughness * float3(rand() - 0.5, rand() - 0.5, rand() - 0.5);
+                ray.direction = normalize(ray.direction);
+                distance = bestHit.distance;
+                //ray.direction = -ray.direction;
+                bestHit = CreateRayHit();
+                traverseOctree(ray, bestHit);
+                //if (bestHit.distance < 1.#INF)
+                //{
+                //    bestHit.distance = 1.#INF;
+                //    ray.direction = reflect(ray.direction, -bestHit.normal) +0.01 * sin(10000 * bestHit.position.x + 10000 * bestHit.position.z + 10000 * bestHit.position.y);;
+                //    ray.energy *= 0.6;
+                //}
+            }
         }
     }
     //if (bestHit.distance < 1.#INF)
     {
-        bestHit.distance = distance;
+        //bestHit.distance = distance;
         bestHit.normal = bestHit.position;
         bestHit.position = position;
     }
     bestHit.octreeid = id;
-	/*for (float i = -1; i <= 1; i++)
-	{
-		IntersectXPlane(ray, bestHit, float3(1.0f + i, -1.0f, 1.0f), 2.0f);
-		IntersectYPlane(ray, bestHit, float3(1.0f, -1.0f + i, 1.0f), 2.0f);
-		IntersectZPlane(ray, bestHit, float3(1.0f, -1.0f, 1.0f + i), 2.0f);
-	}*/
-	//IntersectYPlane(ray, bestHit);
-	// Add a floating unit sphere
-	//IntersectSphere(ray, bestHit, float4(0, 3.0f, 0, 1.0f));
+
 	return bestHit;
 }
-
-//float3 Shade(inout Ray ray, RayHit hit)
-//{
-//	if (hit.distance < 1.#INF)
-//	{
-//		float3 specular = float3(0.6f, 0.6f, 0.6f);
-//		// Reflect the ray and multiply energy with specular reflection
-//		ray.origin = hit.position + hit.normal * 0.001f;
-//		ray.direction = reflect(ray.direction, hit.normal);
-//		ray.energy *= specular;
-//		// Return nothing
-//		return float3(0.0f, 0.0f, 0.0f);
-//	}
-//	else
-//	{
-//		// Erase the ray's energy - the sky doesn't reflect anything
-//		ray.energy = 0.0f;
-//		// Sample the skybox and write it
-//		float theta = acos(ray.direction.y) / -PI;
-//		float phi = atan2(ray.direction.x, -ray.direction.z) / -PI * 0.5f;
-//		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
-//	}
-//}
 
 float3 Shade(inout Ray ray, RayHit hit)
 {
@@ -463,9 +429,15 @@ float3 Shade(inout Ray ray, RayHit hit)
         float theta = acos(ray.direction.y) / -PI;
         float phi = atan2(ray.direction.x, -ray.direction.z) / -PI * 0.5f;
 		// Return the normal
-        //return octree[hit.octreeid].boundary.xyz / 10 + 0.2 * float3(sin(100 * octree[hit.octreeid].boundary.x), sin(100 * octree[hit.octreeid].boundary.y), 1) + 0 * rand_seed(octree[hit.octreeid].boundary.x + 10 * octree[hit.octreeid].boundary.y + 100 * octree[hit.octreeid].boundary.z) / 10 + _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz * ray.energy / 10; //hit.normal = dot(hit.normal, float3(0.5, 0.7, 1)) * hit.position / 100;; // *0.5f + 0.5f;
-        return float3(sin(100 * octree[hit.octreeid].boundary.x) / 2 + 0.5, sin(100 * octree[hit.octreeid].boundary.y) / 2 + 0.5, 1);
-
+        //return octree[hit.octreeid].col; //hit.position.xyz * 0 / 10 + 0 * rand_seed(octree[hit.octreeid].boundary.x + 10 * octree[hit.octreeid].boundary.y + 100 * octree[hit.octreeid].boundary.z) * 0 / 10 + _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz * ray.energy; //hit.normal = dot(hit.normal, float3(0.5, 0.7, 1)) * hit.position / 100;; // *0.5f + 0.5f;
+        //return float3(sin(100 * octree[hit.octreeid].boundary.x) / 2 + 0.5, sin(100 * octree[hit.octreeid].boundary.y) / 2 + 0.5, 1);
+        //if (octree[hit.octreeid].visited == 0)
+        //{
+        //    octree[hit.octreeid].visited = 1;
+        //    octree[hit.octreeid].col = octree[hit.octreeid].col * _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
+        //}
+        //return octree[hit.octreeid].col;
+        return ray.energy/2;
     }
     else
 	{
@@ -499,15 +471,15 @@ float2 project_in_previous(float3 pos)
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
 	// Get the dimensions of the RenderTexture
-	uint width, height;
+    uint width, height;
     _Pixel = id.xy;
-	Result.GetDimensions(width, height);
+    Result.GetDimensions(width, height);
 	// Transform pixel to [-1,1] range
 	//float2 uv = float2((id.xy + float2(0.5f, 0.5f)) / float2(width, height) * 2.0f - 1.0f);
     //float2 uv = float2((id.xy + _PixelOffset) / float2(width, height) * 2.0f - 1.0f);
     float2 uv = float2((id.xy) / float2(width, height) * 2.0f - 1.0f);
 	// Get a ray for the UVs
-	Ray ray = CreateCameraRay(uv);
+    Ray ray = CreateCameraRay(uv);
 	// Write some colors
 
 	/*
@@ -520,28 +492,63 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 
 
 	// Trace and shade
-	RayHit hit = Trace(ray);
-	float3 result = Shade(ray, hit);
+    RayHit hit = Trace(ray);
+    float3 result = Shade(ray, hit);
     if (length(result) > 1.0)
     {
         result = result;
     }
     float2 uv_prev = project_in_previous(hit.position);
-    Result[id.xy] = float4(result, 1);
+    //Result[id.xy] = float4(result, 1);
     float2 projxy = (uv_prev + 1) * float2(width, height) / 2.0f + 0.5;
+    //projxy -= frac(projxy);
     //int prevind = IdFrame[projxy].x;
-    float wt = 0;
+    float wt = 0.9;
+    //if ((projxy.x >= 0 && projxy.y >= 0 && projxy.x < width && projxy.y < height))
+    //{
+    //    if (hit.distance < 1.#INF)
+    //    {
+    //        //if (OldPos[projxy].w == hit.octreeid)
+    //        //    Result[id.xy] = Result[id.xy] * wt + PreviousFrame[projxy] * (1 - wt);
+    //        if (length(OldPos[projxy].xyz - hit.position) < 0.02)
+    //            Result[id.xy] = 0;//Result[id.xy] * wt + float4(result, 1) * (1 - wt);
+    //        else
+    //            Result[id.xy] = float4(result, 1);
+    //    }
+    //    else
+    //        Result[id.xy] = float4(result, 1);
+    //}
+    
     if ((projxy.x >= 0 && projxy.y >= 0 && projxy.x < width && projxy.y < height))
-        if (length(OldPos[projxy].xyz - hit.position) < 0.02 && hit.distance < 1.#INF)
-            Result[id.xy] = Result[id.xy] * wt + PreviousFrame[projxy] * (1 - wt);
-    NewPos[id.xy] = float4(hit.position, 1);
-	// Trace and shade
-	/*float3 result = float3(0, 0, 0);
-	for (int i = 0; i < 8; i++)
-	{
-		RayHit hit = Trace(ray);
-		result += ray.energy * Shade(ray, hit);
-		if (!any(ray.energy))
-			break;
-	}*/
-}
+    {
+        if (length(OldPos[projxy].xyz - hit.position) < 0.02)
+        {
+            Result[id.xy] = PreviousFrame[projxy] * wt + float4(result, 1) * (1 - wt);
+                    //Result[id.xy] = Result[id.xy] * wt + PreviousFrame[projxy] * (1 - wt);
+        }
+        else
+            Result[id.xy] = float4(result, 1);
+    }
+    else
+        Result[id.xy] = float4(result, 1);
+    
+    //if (NewPos[id.xy + float2(1, 1)].w == hit.octreeid)
+    //    Result[id.xy] = NewPos[id.xy]; //Result[id.xy + float2(1, 1)];
+    //if (NewPos[id.xy + float2(1, 1)].w == hit.octreeid)
+    //    Result[id.xy] = Result[id.xy + float2(1, 1)];
+    //if (NewPos[id.xy + float2(1, -1)].w == hit.octreeid)
+    //    Result[id.xy] = Result[id.xy + float2(1, -1)];
+    //if (NewPos[id.xy + float2(-1, 1)].w == hit.octreeid)
+    //    Result[id.xy] = Result[id.xy + float2(-1, 1)];
+    //if (NewPos[id.xy + float2(-1, -1)].w == hit.octreeid)
+    //    Result[id.xy] = Result[id.xy + float2(-1, -1)];
+    //if (NewPos[id.xy + float2(0, 1)].w == hit.octreeid)
+    //    Result[id.xy] = Result[id.xy + float2(0, 1)];
+    //if (NewPos[id.xy + float2(0, -1)].w == hit.octreeid)
+    //    Result[id.xy] = Result[id.xy + float2(0, -1)];
+    //if (NewPos[id.xy + float2(1, 0)].w == hit.octreeid)
+    //    Result[id.xy] = Result[id.xy + float2(1, 0)];
+    //if (NewPos[id.xy + float2(-1, 0)].w == hit.octreeid)
+    //    Result[id.xy] = Result[id.xy + float2(-1, 0)];
+        NewPos[id.xy] = float4(hit.position, hit.octreeid); //float4(hit.position, 1);
+    }

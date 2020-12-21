@@ -46,8 +46,11 @@ public class OctreeArray : MonoBehaviour
         unsafe public fixed int child[8];     //lower sw, se, ne, sw | upper sw, se, ne, sw
         public int level;
         public int divided;
-
-        public Tree(int level_, Vector3 pos, float w)
+        public float R;
+        public float G;
+        public float B;
+        public int visited;
+        public Tree(int level_, Vector3 pos, float w, Vector3 color)
         {
             divided = 0;
             level = level_;
@@ -60,6 +63,10 @@ public class OctreeArray : MonoBehaviour
             {
                 child[i] = -1;
             }
+            R = color.x;
+            G = color.y;
+            B = color.z;
+            visited = 0;
         }
 
         public void subdivide(Tree[] AllNodes, ref int headind)
@@ -82,7 +89,7 @@ public class OctreeArray : MonoBehaviour
 
                 for (int i = 0; i < 8; i++)
                 {
-                    AllNodes[headind] = ( new Tree(level - 1, centers[i], boundary.w / 2.0f) );
+                    AllNodes[headind] = ( new Tree(level - 1, centers[i], boundary.w / 2.0f, new Vector3(Random.value, Random.value, Random.value) ));
                     child[i] = headind;
                     headind++;
                     //Debug.Log("headindex in function: " + headind);
@@ -143,7 +150,7 @@ public class OctreeArray : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        AllNodes[headindex] = (new Tree(10, new Vector3(size / 2, size / 2, size / 2), size / 2));
+        AllNodes[headindex] = (new Tree(10, new Vector3(size / 2, size / 2, size / 2), size / 2, new Vector3(Random.value, Random.value, Random.value)));
         headindex++;
         //Tree noctreee = new Tree(1, new Vector3(size / 2, size / 2, size / 2), size / 2);
         //AllNodes.Add(noctreee);
@@ -179,6 +186,10 @@ public class OctreeArray : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        for (int i=0; i< 9972521; i++)
+        {
+            AllNodes[i].visited = 0;
+        }
         Debug.Log("headindex: " + headindex);
         Debug.Log("sizeof: " + 214985*Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf(typeof(Tree)));
         //Debug.Log("Sizeoftemp " + Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf(typeof(tempstruct)));

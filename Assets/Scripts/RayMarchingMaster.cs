@@ -16,6 +16,7 @@ public class RayMarchingMaster : MonoBehaviour
     private RenderTexture PreviousFrame;
     private RenderTexture OldPos;
     private RenderTexture NewPos;
+    private RenderTexture blank;
     private Matrix4x4 _prev_proj;
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
@@ -31,11 +32,14 @@ public class RayMarchingMaster : MonoBehaviour
         RayTracingShader.SetTexture(0, "Result", _target);
         RayTracingShader.SetTexture(0, "PreviousFrame", PreviousFrame);
         Graphics.Blit(NewPos, OldPos);
-        RayTracingShader.SetTexture(0, "NewPos", NewPos);
+        //Graphics.CopyTexture(blank, NewPos);
         RayTracingShader.SetTexture(0, "OldPos", OldPos);
+        RayTracingShader.SetTexture(0, "NewPos", NewPos);
         int threadGroupsX = Mathf.CeilToInt(Screen.width / 32.0f);
         int threadGroupsY = Mathf.CeilToInt(Screen.height / 32.0f);
+        float time = Time.realtimeSinceStartup;
         RayTracingShader.Dispatch(0, threadGroupsX, threadGroupsY, 1);
+        //Debug.Log((Time.realtimeSinceStartup - time));
         //// Blit the result texture to the screen
         //Graphics.Blit(_target, destination);
         // Blit the result texture to the screen
@@ -93,6 +97,17 @@ public class RayMarchingMaster : MonoBehaviour
             NewPos.enableRandomWrite = true;
             NewPos.Create();
         }
+        if (blank == null || blank.width != Screen.width || blank.height != Screen.height)
+        {
+            // Release render texture if we already have one
+            if (blank != null)
+                blank.Release();
+            // Get a render PreviousFrame for Ray Tracing
+            blank = new RenderTexture(Screen.width, Screen.height, 0,
+                RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+            blank.enableRandomWrite = true;
+            blank.Create();
+        }
     }
 
     private void Update()
@@ -110,13 +125,16 @@ public class RayMarchingMaster : MonoBehaviour
         {
             Roughness /= 2;
         }
+
+        System.IntPtr ptr = buffer.GetNativeBufferPtr();
+        Debug.Log(ptr); 
     }
 
     private Camera _camera;
     private void Start()
     {
         _camera = GetComponent<Camera>();
-        buffer = new ComputeBuffer(TreeArray.headindex, 60);
+        buffer = new ComputeBuffer(TreeArray.headindex, 76);
         buffer.SetData(TreeArray.AllNodes);
     }
 
